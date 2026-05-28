@@ -33,8 +33,9 @@
     const START_ANGLE = Math.PI * 0.75;   // 135° (7:30)
     const END_ANGLE   = Math.PI * 2.25;   // 405°≡45° (4:30)
 
-    const NEEDLE_ATTACK  = 0.35;
-    const NEEDLE_RELEASE = 0.10;
+    const NEEDLE_ATTACK  = 0.08;
+    const NEEDLE_RELEASE = 0.04;
+    const LP_ALPHA = 0.15;
     const PEAK_HOLD_TIME = 1200;
     const PEAK_DECAY_SPEED = 0.03;
     const TRAIL_LENGTH = 8;
@@ -60,6 +61,7 @@
     //  AUDIO STATE  (unchanged)
     // ═══════════════════════════════════════════════════════════
     let leftLevel = DB_MIN, rightLevel = DB_MIN;
+    let leftFiltered = DB_MIN, rightFiltered = DB_MIN;
     let leftNeedle = DB_MIN, rightNeedle = DB_MIN;
     let leftPeak = DB_MIN, rightPeak = DB_MIN;
     let leftPeakTime = 0, rightPeakTime = 0;
@@ -78,9 +80,9 @@
         let rSum = 0;
         for (let i = 64; i < 128; i++) rSum += audioArray[i];
         let rAvg = rSum / 64;
-        const ref = 0.05;
-        const lDb = 20 * Math.log10(Math.max(lAvg, 1e-6) / ref);
-        const rDb = 20 * Math.log10(Math.max(rAvg, 1e-6) / ref);
+        const ref = 0.708;
+        const lDb = 20 * Math.log10(Math.max(lAvg, 0.001) / ref);
+        const rDb = 20 * Math.log10(Math.max(rAvg, 0.001) / ref);
         leftLevel  = clamp(lDb, DB_MIN, DB_MAX);
         rightLevel = clamp(rDb, DB_MIN, DB_MAX);
         if (leftLevel > leftPeak)  { leftPeak = leftLevel;  leftPeakTime = now; }
@@ -957,9 +959,11 @@
         globalTime = performance.now();
         const lw = window.innerWidth, lh = window.innerHeight;
 
-        // Needle physics
-        leftNeedle  = updateNeedle(leftNeedle, leftLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
-        rightNeedle = updateNeedle(rightNeedle, rightLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        // Needle physics (low-pass filter → envelope follower)
+        leftFiltered  += (leftLevel  - leftFiltered)  * LP_ALPHA;
+        rightFiltered += (rightLevel - rightFiltered) * LP_ALPHA;
+        leftNeedle  = updateNeedle(leftNeedle, leftFiltered, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        rightNeedle = updateNeedle(rightNeedle, rightFiltered, NEEDLE_ATTACK, NEEDLE_RELEASE);
 
         // Peak decay
         const now = performance.now();

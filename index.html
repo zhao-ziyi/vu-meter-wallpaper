@@ -315,7 +315,6 @@
     function drawMeter(cx, cy, radius, needleDb, peakDb, label, trail, time) {
         const arcWidth = radius * 0.22;
         const isOver = needleDb >= 1;
-        const zeroAngle = dbToAngle(0);
 
         // ── Dark track arc ──
         ctx.beginPath();
@@ -327,24 +326,19 @@
         ctx.stroke();
         ctx.shadowBlur = 0;
 
-        // ── Zone arcs ──
-        // Blue zone: -20 to 0 (flat)
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, START_ANGLE, zeroAngle);
-        ctx.lineWidth = arcWidth * 0.55;
-        ctx.strokeStyle = 'rgba(0, 210, 255, 0.10)';
-        ctx.stroke();
-
-        // Orange-to-red gradient zone: 0 to +3 (linear gradient along chord)
-        const gx0 = cx + Math.cos(zeroAngle) * radius;
-        const gy0 = cy + Math.sin(zeroAngle) * radius;
-        const gx1 = cx + Math.cos(END_ANGLE) * radius;
-        const gy1 = cy + Math.sin(END_ANGLE) * radius;
-        const grad = ctx.createLinearGradient(gx0, gy0, gx1, gy1);
-        grad.addColorStop(0, 'rgba(255, 140, 0, 0.08)');
+        // ── Zone arc (single continuous arc: -20 blue → 0dB → +3 red) ──
+        const t0dB = (0 - DB_MIN) / (DB_MAX - DB_MIN);
+        const gradX0 = cx + Math.cos(START_ANGLE) * radius;
+        const gradY0 = cy + Math.sin(START_ANGLE) * radius;
+        const gradX1 = cx + Math.cos(END_ANGLE) * radius;
+        const gradY1 = cy + Math.sin(END_ANGLE) * radius;
+        const grad = ctx.createLinearGradient(gradX0, gradY0, gradX1, gradY1);
+        grad.addColorStop(0, 'rgba(0, 210, 255, 0.10)');
+        grad.addColorStop(t0dB, 'rgba(0, 210, 255, 0.10)');
+        grad.addColorStop(t0dB, 'rgba(255, 140, 0, 0.08)');
         grad.addColorStop(1, 'rgba(255, 50, 50, 0.10)');
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, zeroAngle, END_ANGLE);
+        ctx.arc(cx, cy, radius, START_ANGLE, END_ANGLE);
         ctx.lineWidth = arcWidth * 0.55;
         ctx.strokeStyle = grad;
         ctx.stroke();

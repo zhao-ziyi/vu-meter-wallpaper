@@ -314,7 +314,7 @@
     // ═══════════════════════════════════════════════════════════
     function drawMeter(cx, cy, radius, needleDb, peakDb, label, trail, time) {
         const arcWidth = radius * 0.22;
-        const isOver = needleDb >= 1;
+        const isOver = needleDb >= 0;
         const zeroAngle = dbToAngle(0);
 
         // ── Dark track arc ──
@@ -418,7 +418,7 @@
             const angle = dbToAngle(db);
             const innerT = radius - arcWidth * 0.30;
             const outerT = radius + arcWidth * 0.25;
-            const isRed = db >= 1;
+            const isRed = db >= 0;
             ctx.beginPath();
             ctx.moveTo(cx + Math.cos(angle) * innerT, cy + Math.sin(angle) * innerT);
             ctx.lineTo(cx + Math.cos(angle) * outerT, cy + Math.sin(angle) * outerT);

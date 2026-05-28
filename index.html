@@ -768,11 +768,14 @@
     // ═════════════════════════════════════════════════════════
     //  BOTTOM SPECTRUM PARTICLES
     // ═════════════════════════════════════════════════════════
-    const SPECTRUM_BAND_COUNT = 64;
+    let SPECTRUM_BAND_COUNT = 64;
     const SPECTRUM_PARTICLES_PER_BAND = 1;
-    const spectrumBands = [];
+    let spectrumBands = [];
 
-    function initSpectrum() {
+    function initSpectrum(lw) {
+        // Adaptive band count based on screen width
+        SPECTRUM_BAND_COUNT = Math.max(16, Math.floor(lw / 30));
+        spectrumBands = [];
         for (let i = 0; i < SPECTRUM_BAND_COUNT * 2; i++) {
             spectrumBands.push({
                 particles: [],
@@ -781,7 +784,19 @@
             });
         }
     }
-    initSpectrum();
+
+    function getSpectrumValue(index, bandCount) {
+        // Downsample 64 source values to bandCount bands per channel
+        const step = 64 / bandCount;
+        const start = Math.floor(index * step);
+        const end = Math.min(Math.floor((index + 1) * step), 64);
+        let sum = 0, count = 0;
+        for (let j = start; j < end; j++) {
+            sum += (audioSpectrum[j] || 0);
+            count++;
+        }
+        return count > 0 ? sum / count : 0;
+    }
 
     function spawnSpectrumParticles(lw, lh) {
         const spectrumH = lh * 0.22;
@@ -793,12 +808,11 @@
             const band = spectrumBands[i];
             let val;
             if (i < SPECTRUM_BAND_COUNT) {
-                // Left channel: bands 0-63, freq low→high, position left edge → center
-                val = audioSpectrum[i] || 0;
+                // Left channel: downsampled from 64 source values
+                val = getSpectrumValue(i, SPECTRUM_BAND_COUNT);
             } else {
-                // Right channel: bands 64-127, freq low→high but positioned reversed (right edge → center)
-                const ri = i - SPECTRUM_BAND_COUNT;
-                val = audioSpectrum[64 + ri] || 0;
+                // Right channel: downsampled from source values 64-127
+                val = getSpectrumValue(i - SPECTRUM_BAND_COUNT, SPECTRUM_BAND_COUNT);
             }
             band.targetH = val * spectrumH;
             band.currentH += (band.targetH - band.currentH) * 0.18;
@@ -815,9 +829,7 @@
                     r: 1.0 + Math.random() * 1.5,
                     life: 1.0,
                     decay: 0.010 + Math.random() * 0.015,
-                    hue: i < SPECTRUM_BAND_COUNT
-                        ? 195 + (i / SPECTRUM_BAND_COUNT) * 25
-                        : 180 - ((i - SPECTRUM_BAND_COUNT) / SPECTRUM_BAND_COUNT) * 20,
+                    hue: 200 - (cx / (lw - 1)) * 40,
                 });
             }
 
@@ -848,11 +860,7 @@
                 ? i * bandW
                 : halfW + (SPECTRUM_BAND_COUNT - 1 - (i - SPECTRUM_BAND_COUNT)) * bandW;
 
-            const isLeft = i < SPECTRUM_BAND_COUNT;
-            const ri = isLeft ? i : (i - SPECTRUM_BAND_COUNT);
-            const hue = isLeft
-                ? 195 + (ri / SPECTRUM_BAND_COUNT) * 25
-                : 180 - (ri / SPECTRUM_BAND_COUNT) * 20;
+            const hue = 200 - (x / (lw - 1)) * 40;
             const alpha = 0.08 + 0.10 * (h / spectrumH);
 
             const grad = ctx.createLinearGradient(x, bottomY, x, bottomY - h);
@@ -933,12 +941,22 @@
         ctx.restore();
     }
 
+    // Track last band count to detect resize changes
+    let lastBandCount = 0;
+
     // ═══════════════════════════════════════════════════════════
     //  MAIN LOOP
     // ═══════════════════════════════════════════════════════════
     function frame() {
         globalTime = performance.now();
         const lw = window.innerWidth, lh = window.innerHeight;
+
+        // Adaptive spectrum band count (re-init on resize)
+        const newBandCount = Math.max(16, Math.floor(lw / 30));
+        if (newBandCount !== lastBandCount) {
+            lastBandCount = newBandCount;
+            initSpectrum(lw);
+        }
 
         // Needle physics
         leftNeedle  = updateNeedle(leftNeedle, leftLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
@@ -1010,6 +1028,15 @@
     }
 
     requestAnimationFrame(frame);
+
+    // Debounced resize: re-init spectrum on window resize
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            lastBandCount = 0; // force re-init on next frame
+        }, 300);
+    });
 })();
 </script>
 </body>

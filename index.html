@@ -326,22 +326,34 @@
         ctx.stroke();
         ctx.shadowBlur = 0;
 
-        // ── Zone arc (single continuous arc: -20 blue → 0dB → +3 red) ──
+        // ── Zone arc: -20 to +3 (120 stepped segments, angular color control) ──
+        const zoneSteps = 120;
         const t0dB = (0 - DB_MIN) / (DB_MAX - DB_MIN);
-        const gradX0 = cx + Math.cos(START_ANGLE) * radius;
-        const gradY0 = cy + Math.sin(START_ANGLE) * radius;
-        const gradX1 = cx + Math.cos(END_ANGLE) * radius;
-        const gradY1 = cy + Math.sin(END_ANGLE) * radius;
-        const grad = ctx.createLinearGradient(gradX0, gradY0, gradX1, gradY1);
-        grad.addColorStop(0, 'rgba(0, 210, 255, 0.10)');
-        grad.addColorStop(t0dB, 'rgba(0, 210, 255, 0.10)');
-        grad.addColorStop(t0dB, 'rgba(255, 140, 0, 0.08)');
-        grad.addColorStop(1, 'rgba(255, 50, 50, 0.10)');
-        ctx.beginPath();
-        ctx.arc(cx, cy, radius, START_ANGLE, END_ANGLE);
-        ctx.lineWidth = arcWidth * 0.55;
-        ctx.strokeStyle = grad;
-        ctx.stroke();
+        const arcSpan = END_ANGLE - START_ANGLE;
+        for (let i = 0; i < zoneSteps; i++) {
+            const t0 = i / zoneSteps;
+            const t1 = (i + 1) / zoneSteps;
+            const tMid = (t0 + t1) / 2;
+            const a0 = START_ANGLE + t0 * arcSpan;
+            const a1 = START_ANGLE + t1 * arcSpan;
+
+            let color;
+            if (tMid < t0dB) {
+                color = 'rgba(0, 210, 255, 0.10)';
+            } else {
+                const tGrad = (tMid - t0dB) / (1 - t0dB);
+                const g = Math.round(140 - tGrad * 90);
+                const b = Math.round(tGrad * 50);
+                const alpha = 0.08 + tGrad * 0.02;
+                color = `rgba(255, ${g}, ${b}, ${alpha})`;
+            }
+
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, a0, a1);
+            ctx.lineWidth = arcWidth * 0.55;
+            ctx.strokeStyle = color;
+            ctx.stroke();
+        }
 
         // ── Tick marks ──
         const majorDbs = [-20, -10, -5, -3, -2, -1, 0, 1, 2, 3];

@@ -975,14 +975,14 @@
         let r;
         if (isHorizontal) {
             r = Math.min(lw, lh) * 0.20;
-            const maxR = (lw * 0.85) / (2 * 1.2);
+            const maxR = (lw * 0.85) / (2 * 1.35);
             r = Math.min(r, maxR);
         } else {
             r = Math.min(lw, lh) * 0.20;
-            const maxR = (lh * 0.70) / (2 * 1.4);
+            const maxR = (lh * 0.70) / (2 * 1.45);
             r = Math.min(r, maxR);
         }
-        const spacing = r * 1.25;
+        const spacing = r * 1.30;
         let lcx, lcy, rcx, rcy;
         if (isHorizontal) {
             lcx = cx - spacing; lcy = cy;

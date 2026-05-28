@@ -692,16 +692,16 @@
         const punch = Math.min(lowFreq * 2.5, 1.0);
         const breath = 0.30 + 0.12 * Math.sin(t * 1.2) + punch * 0.35;
 
-        const leftDbStr = leftHudNeedle > DB_MIN + 0.5
+        const leftDbStr = leftLevel > DB_MIN + 0.01
             ? `${leftHudNeedle >= 0 ? '+' : ''}${leftHudNeedle.toFixed(1)}`
             : '---';
-        const rightDbStr = rightHudNeedle > DB_MIN + 0.5
+        const rightDbStr = rightLevel > DB_MIN + 0.01
             ? `${rightHudNeedle >= 0 ? '+' : ''}${rightHudNeedle.toFixed(1)}`
             : '---';
-        const leftPeakStr = leftHudPeak > DB_MIN + 0.5
+        const leftPeakStr = leftPeak > DB_MIN + 0.01
             ? `${leftHudPeak >= 0 ? '+' : ''}${leftHudPeak.toFixed(1)}`
             : '---';
-        const rightPeakStr = rightHudPeak > DB_MIN + 0.5
+        const rightPeakStr = rightPeak > DB_MIN + 0.01
             ? `${rightHudPeak >= 0 ? '+' : ''}${rightHudPeak.toFixed(1)}`
             : '---';
 

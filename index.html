@@ -351,6 +351,19 @@
         ctx.strokeStyle = grad;
         ctx.stroke();
 
+        // Rounded endpoints (manual dots at -20dB and +3dB)
+        const dotR = arcWidth * 0.275;
+        // -20dB: blue dot
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(START_ANGLE) * radius, cy + Math.sin(START_ANGLE) * radius, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 210, 255, 0.10)';
+        ctx.fill();
+        // +3dB: red dot
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(END_ANGLE) * radius, cy + Math.sin(END_ANGLE) * radius, dotR, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 50, 50, 0.10)';
+        ctx.fill();
+
         // ── Tick marks ──
         const majorDbs = [-20, -10, -5, -3, -2, -1, 0, 1, 2, 3];
         const minorDbs = [-18, -16, -14, -12, -9, -8, -7, -6, -4, -2.5, -1.5, -0.5, 0.5, 1.5, 2.5];

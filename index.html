@@ -615,7 +615,7 @@
     // ═════════════════════════════════════════════════════════
     function drawHUD(lw, lh, lcx, lcy, rcx, rcy, r, isHorizontal, time) {
         const hudW = r * 1.9;
-        const hudH = r * 0.28;
+        const hudH = r * 0.50;
         let hudX, hudY;
 
         if (isHorizontal) {
@@ -684,10 +684,10 @@
             ? `${rightPeak >= 0 ? '+' : ''}${rightPeak.toFixed(1)}`
             : '---';
 
-        // Vertical divider line
+        // Vertical divider line (expanded for taller panel)
         ctx.beginPath();
-        ctx.moveTo(midX, hudY + hudH * 0.18);
-        ctx.lineTo(midX, hudY + hudH * 0.82);
+        ctx.moveTo(midX, hudY + hudH * 0.10);
+        ctx.lineTo(midX, hudY + hudH * 0.90);
         ctx.strokeStyle = 'rgba(0, 190, 230, 0.22)';
         ctx.lineWidth = 1;
         ctx.stroke();
@@ -709,11 +709,11 @@
         ctx.font = `600 ${labelSize}px 'Rajdhani', sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(80, 190, 240, 0.45)';
-        ctx.fillText('LEFT', lx, rowY - valueSize * 0.5);
-        // Decorative underline
+        ctx.fillText('LEFT', lx, hudY + hudH * 0.12);
+        // Decorative underline (follows label)
         ctx.beginPath();
-        ctx.moveTo(lx - valueSize * 0.55, rowY - valueSize * 0.25);
-        ctx.lineTo(lx + valueSize * 0.55, rowY - valueSize * 0.25);
+        ctx.moveTo(lx - valueSize * 0.55, hudY + hudH * 0.12 + valueSize * 0.25);
+        ctx.lineTo(lx + valueSize * 0.55, hudY + hudH * 0.12 + valueSize * 0.25);
         ctx.strokeStyle = 'rgba(0, 180, 220, 0.18)';
         ctx.lineWidth = 1;
         ctx.stroke();
@@ -733,17 +733,17 @@
         ctx.fillStyle = leftPeakStr === '---'
             ? 'rgba(255, 110, 110, 0.15)'
             : 'rgba(255, 130, 130, 0.5)';
-        ctx.fillText(`PEAK ${leftPeakStr}`, lx, rowY + valueSize * 0.58);
+        ctx.fillText(`PEAK ${leftPeakStr}`, lx, hudY + hudH * 0.85);
 
         // ── Right panel ──
         const rx = hudX + hudW * 0.75;
         ctx.font = `600 ${labelSize}px 'Rajdhani', sans-serif`;
         ctx.textAlign = 'center';
         ctx.fillStyle = 'rgba(80, 190, 240, 0.45)';
-        ctx.fillText('RIGHT', rx, rowY - valueSize * 0.5);
+        ctx.fillText('RIGHT', rx, hudY + hudH * 0.12);
         ctx.beginPath();
-        ctx.moveTo(rx - valueSize * 0.55, rowY - valueSize * 0.25);
-        ctx.lineTo(rx + valueSize * 0.55, rowY - valueSize * 0.25);
+        ctx.moveTo(rx - valueSize * 0.55, hudY + hudH * 0.12 + valueSize * 0.25);
+        ctx.lineTo(rx + valueSize * 0.55, hudY + hudH * 0.12 + valueSize * 0.25);
         ctx.strokeStyle = 'rgba(0, 180, 220, 0.18)';
         ctx.lineWidth = 1;
         ctx.stroke();
@@ -761,7 +761,7 @@
         ctx.fillStyle = rightPeakStr === '---'
             ? 'rgba(255, 110, 110, 0.15)'
             : 'rgba(255, 130, 130, 0.5)';
-        ctx.fillText(`PEAK ${rightPeakStr}`, rx, rowY + valueSize * 0.58);
+        ctx.fillText(`PEAK ${rightPeakStr}`, rx, hudY + hudH * 0.85);
     }
 
     // ═════════════════════════════════════════════════════════

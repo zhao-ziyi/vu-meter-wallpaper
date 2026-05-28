@@ -197,10 +197,8 @@
         }
     }
 
-    function updateEnergyOrbs(lcx, lcy, rcx, rcy, r, isHorizontal) {
-        const centers = isHorizontal
-            ? [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }]
-            : [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }];
+    function updateEnergyOrbs(lcx, lcy, rcx, rcy, r) {
+        const centers = [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }];
         for (let i = 0; i < energyOrbs.length; i++) {
             const orb = energyOrbs[i];
             const meter = centers[i % 2];
@@ -258,7 +256,7 @@
     // ═══════════════════════════════════════════════════════════
     //  BACKGROUND: dot grid + scanlines + radial glow
     // ═══════════════════════════════════════════════════════════
-    function drawBackground(lw, lh, lcx, lcy, rcx, rcy, r, isHorizontal) {
+    function drawBackground(lw, lh, lcx, lcy, rcx, rcy, r) {
         const cx = lw / 2, cy = lh / 2;
 
         // Base gradient
@@ -285,9 +283,7 @@
         }
 
         // Radial glow behind each meter
-        const meters = isHorizontal
-            ? [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }]
-            : [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }];
+        const meters = [{ cx: lcx, cy: lcy }, { cx: rcx, cy: rcy }];
         for (const m of meters) {
             const glowGrad = ctx.createRadialGradient(m.cx, m.cy, r * 0.5, m.cx, m.cy, r * 1.6);
             glowGrad.addColorStop(0, 'rgba(0, 180, 220, 0.06)');
@@ -613,18 +609,11 @@
     // ══════════════════════════════════════════════════════════
     //  HUD DATA PANEL
     // ═════════════════════════════════════════════════════════
-    function drawHUD(lw, lh, lcx, lcy, rcx, rcy, r, isHorizontal, time) {
+    function drawHUD(lw, lh, lcx, lcy, rcx, rcy, r, time) {
         const hudW = r * 1.9;
-        const hudH = r * 0.50;
-        let hudX, hudY;
-
-        if (isHorizontal) {
-            hudX = (lw / 2) - hudW / 2;
-            hudY = lcy + r * 1.2;
-        } else {
-            hudX = (lw / 2) - hudW / 2;
-            hudY = (lh / 2) - hudH / 2;
-        }
+        const hudH = r * 0.4;
+        const hudX = (lw / 2) - hudW / 2;
+        const hudY = lcy + r * 1.2;
 
         // Panel background
         const cornerR = 8;
@@ -968,29 +957,13 @@
         if (leftTrail.length > TRAIL_LENGTH) leftTrail.shift();
         if (rightTrail.length > TRAIL_LENGTH) rightTrail.shift();
 
-        // Layout
+        // Layout (horizontal only — wallpaper is always landscape)
         const cx = lw / 2, cy = lh / 2;
-        const aspect = lw / lh;
-        const isHorizontal = aspect >= 1.55;
-        let r;
-        if (isHorizontal) {
-            r = Math.min(lw, lh) * 0.20;
-            const maxR = (lw * 0.85) / (2 * 1.35);
-            r = Math.min(r, maxR);
-        } else {
-            r = Math.min(lw, lh) * 0.20;
-            const maxR = (lh * 0.70) / (2 * 1.45);
-            r = Math.min(r, maxR);
-        }
+        let r = Math.min(lw, lh) * 0.20;
+        r = Math.min(r, Math.min(lw / (2 * 1.35), lh / 1.45));
         const spacing = r * 1.30;
-        let lcx, lcy, rcx, rcy;
-        if (isHorizontal) {
-            lcx = cx - spacing; lcy = cy;
-            rcx = cx + spacing; rcy = cy;
-        } else {
-            lcx = cx; lcy = cy - spacing;
-            rcx = cx; rcy = cy + spacing;
-        }
+        const lcx = cx - spacing, lcy = cy;
+        const rcx = cx + spacing, rcy = cy;
 
         // Clear
         ctx.save();
@@ -999,16 +972,16 @@
         ctx.restore();
 
         // Draw layers (back to front)
-        drawBackground(lw, lh, lcx, lcy, rcx, rcy, r, isHorizontal);
+        drawBackground(lw, lh, lcx, lcy, rcx, rcy, r);
         updateParticles(lw, lh);
-        updateEnergyOrbs(lcx, lcy, rcx, rcy, r, isHorizontal);
+        updateEnergyOrbs(lcx, lcy, rcx, rcy, r);
         drawBgDust();
         drawStreamers();
         drawEnergyOrbs();
         drawTitle(lw, lh);
         drawMeter(lcx, lcy, r, leftNeedle, leftPeak, 'L', leftTrail, globalTime);
         drawMeter(rcx, rcy, r, rightNeedle, rightPeak, 'R', rightTrail, globalTime);
-        drawHUD(lw, lh, lcx, lcy, rcx, rcy, r, isHorizontal, globalTime);
+        drawHUD(lw, lh, lcx, lcy, rcx, rcy, r, globalTime);
         spawnSpectrumParticles(lw, lh);
         drawSpectrum(lw, lh);
 

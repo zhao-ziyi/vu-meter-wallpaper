@@ -35,6 +35,8 @@
 
     const NEEDLE_ATTACK  = 0.35;
     const NEEDLE_RELEASE = 0.10;
+    const PEAK_ATTACK    = 0.25;
+    const PEAK_RELEASE   = 0.04;
     const PEAK_HOLD_TIME = 1200;
     const PEAK_DECAY_SPEED = 0.03;
     const TRAIL_LENGTH = 8;
@@ -63,6 +65,8 @@
     let leftNeedle = DB_MIN, rightNeedle = DB_MIN;
     let leftPeak = DB_MIN, rightPeak = DB_MIN;
     let leftPeakTime = 0, rightPeakTime = 0;
+    let leftHudNeedle = DB_MIN, rightHudNeedle = DB_MIN;
+    let leftHudPeak = DB_MIN, rightHudPeak = DB_MIN;
     let lastAudioUpdate = 0;
     let audioTimeout = null;
     let audioSpectrum = new Array(128).fill(0);
@@ -678,17 +682,27 @@
         const peakSize  = Math.round(r * 0.08);
         const rowY = hudY + hudH * 0.5;
 
-        const leftDbStr = leftNeedle > DB_MIN + 0.5
-            ? `${leftNeedle >= 0 ? '+' : ''}${leftNeedle.toFixed(1)}`
+        // Title-style shimmer for value text
+        const t = time * 0.001;
+        let lowFreq = 0;
+        for (let i = 0; i < 8; i++) {
+            lowFreq += (audioSpectrum[i] || 0) + (audioSpectrum[i + 64] || 0);
+        }
+        lowFreq /= 16;
+        const punch = Math.min(lowFreq * 2.5, 1.0);
+        const breath = 0.30 + 0.12 * Math.sin(t * 1.2) + punch * 0.35;
+
+        const leftDbStr = leftHudNeedle > DB_MIN + 0.5
+            ? `${leftHudNeedle >= 0 ? '+' : ''}${leftHudNeedle.toFixed(1)}`
             : '---';
-        const rightDbStr = rightNeedle > DB_MIN + 0.5
-            ? `${rightNeedle >= 0 ? '+' : ''}${rightNeedle.toFixed(1)}`
+        const rightDbStr = rightHudNeedle > DB_MIN + 0.5
+            ? `${rightHudNeedle >= 0 ? '+' : ''}${rightHudNeedle.toFixed(1)}`
             : '---';
-        const leftPeakStr = leftPeak > DB_MIN + 0.5
-            ? `${leftPeak >= 0 ? '+' : ''}${leftPeak.toFixed(1)}`
+        const leftPeakStr = leftHudPeak > DB_MIN + 0.5
+            ? `${leftHudPeak >= 0 ? '+' : ''}${leftHudPeak.toFixed(1)}`
             : '---';
-        const rightPeakStr = rightPeak > DB_MIN + 0.5
-            ? `${rightPeak >= 0 ? '+' : ''}${rightPeak.toFixed(1)}`
+        const rightPeakStr = rightHudPeak > DB_MIN + 0.5
+            ? `${rightHudPeak >= 0 ? '+' : ''}${rightHudPeak.toFixed(1)}`
             : '---';
 
         // Vertical divider line (expanded for taller panel)
@@ -726,12 +740,13 @@
         ctx.stroke();
         // Value
         ctx.font = `bold ${valueSize}px 'Share Tech Mono', 'Consolas', monospace`;
-        ctx.fillStyle = leftDbStr === '---'
-            ? 'rgba(100, 180, 220, 0.3)'
-            : 'rgba(190, 245, 255, 0.95)';
+        const leftAlpha = leftDbStr === '---'
+            ? 0.3
+            : 0.55 + breath * 0.35;
+        ctx.fillStyle = `rgba(190, 245, 255, ${leftAlpha})`;
         ctx.shadowColor = leftDbStr === '---'
             ? 'rgba(0, 140, 200, 0.1)'
-            : 'rgba(0, 210, 255, 0.55)';
+            : `rgba(0, 210, 255, ${0.2 + breath * 0.5})`;
         ctx.shadowBlur = 10;
         ctx.fillText(leftDbStr, lx, rowY + valueSize * 0.15);
         ctx.shadowBlur = 0;
@@ -755,12 +770,13 @@
         ctx.lineWidth = 1;
         ctx.stroke();
         ctx.font = `bold ${valueSize}px 'Share Tech Mono', 'Consolas', monospace`;
-        ctx.fillStyle = rightDbStr === '---'
-            ? 'rgba(100, 180, 220, 0.3)'
-            : 'rgba(190, 245, 255, 0.95)';
+        const rightAlpha = rightDbStr === '---'
+            ? 0.3
+            : 0.55 + breath * 0.35;
+        ctx.fillStyle = `rgba(190, 245, 255, ${rightAlpha})`;
         ctx.shadowColor = rightDbStr === '---'
             ? 'rgba(0, 140, 200, 0.1)'
-            : 'rgba(0, 210, 255, 0.55)';
+            : `rgba(0, 210, 255, ${0.2 + breath * 0.5})`;
         ctx.shadowBlur = 10;
         ctx.fillText(rightDbStr, rx, rowY + valueSize * 0.15);
         ctx.shadowBlur = 0;
@@ -956,6 +972,12 @@
         // Needle physics (low-pass filter → envelope follower)
         leftNeedle  = updateNeedle(leftNeedle, leftLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
         rightNeedle = updateNeedle(rightNeedle, rightLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
+
+        // HUD display smoothing (same envelope follower logic)
+        leftHudNeedle  = updateNeedle(leftHudNeedle, leftNeedle, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        rightHudNeedle = updateNeedle(rightHudNeedle, rightNeedle, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        leftHudPeak    = updateNeedle(leftHudPeak, leftPeak, PEAK_ATTACK, PEAK_RELEASE);
+        rightHudPeak   = updateNeedle(rightHudPeak, rightPeak, PEAK_ATTACK, PEAK_RELEASE);
 
         // Peak decay
         const now = performance.now();

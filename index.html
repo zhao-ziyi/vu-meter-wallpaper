@@ -79,8 +79,8 @@
         for (let i = 64; i < 128; i++) rSum += audioArray[i];
         let rAvg = rSum / 64;
         const ref = 0.708;
-        const lDb = 20 * Math.log10(Math.max(lAvg, 0.001) / ref);
-        const rDb = 20 * Math.log10(Math.max(rAvg, 0.001) / ref);
+        const lDb = 20 * Math.log10((lAvg || 1e-10) / ref);
+        const rDb = 20 * Math.log10((rAvg || 1e-10) / ref);
         leftLevel  = clamp(lDb, DB_MIN, DB_MAX);
         rightLevel = clamp(rDb, DB_MIN, DB_MAX);
         if (leftLevel > leftPeak)  { leftPeak = leftLevel;  leftPeakTime = now; }

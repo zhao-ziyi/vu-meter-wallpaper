@@ -46,7 +46,8 @@
     const ctx = canvas.getContext('2d');
     let W, H;
 
-    function resize() {
+    // One-time canvas size init (Wallpaper Engine resolution is fixed after startup)
+    {
         const dpr = window.devicePixelRatio || 1;
         W = canvas.width  = window.innerWidth  * dpr;
         H = canvas.height = window.innerHeight * dpr;
@@ -54,8 +55,6 @@
         canvas.style.height = window.innerHeight + 'px';
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-    window.addEventListener('resize', resize);
-    resize();
 
     // ═══════════════════════════════════════════════════════════
     //  AUDIO STATE  (unchanged)
@@ -768,13 +767,12 @@
     // ═════════════════════════════════════════════════════════
     //  BOTTOM SPECTRUM PARTICLES
     // ═════════════════════════════════════════════════════════
-    let SPECTRUM_BAND_COUNT = 64;
+    // Spectrum band count: computed once at init (resolution is fixed in Wallpaper Engine)
+    const SPECTRUM_BAND_COUNT = Math.max(16, Math.floor(window.innerWidth / 30));
     const SPECTRUM_PARTICLES_PER_BAND = 1;
     let spectrumBands = [];
 
-    function initSpectrum(lw) {
-        // Adaptive band count based on screen width
-        SPECTRUM_BAND_COUNT = Math.max(16, Math.floor(lw / 30));
+    function initSpectrum() {
         spectrumBands = [];
         for (let i = 0; i < SPECTRUM_BAND_COUNT * 2; i++) {
             spectrumBands.push({
@@ -941,22 +939,12 @@
         ctx.restore();
     }
 
-    // Track last band count to detect resize changes
-    let lastBandCount = 0;
-
     // ═══════════════════════════════════════════════════════════
     //  MAIN LOOP
     // ═══════════════════════════════════════════════════════════
     function frame() {
         globalTime = performance.now();
         const lw = window.innerWidth, lh = window.innerHeight;
-
-        // Adaptive spectrum band count (re-init on resize)
-        const newBandCount = Math.max(16, Math.floor(lw / 30));
-        if (newBandCount !== lastBandCount) {
-            lastBandCount = newBandCount;
-            initSpectrum(lw);
-        }
 
         // Needle physics
         leftNeedle  = updateNeedle(leftNeedle, leftLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
@@ -1027,16 +1015,9 @@
         requestAnimationFrame(frame);
     }
 
+    // One-time init (resolution is fixed in Wallpaper Engine)
+    initSpectrum();
     requestAnimationFrame(frame);
-
-    // Debounced resize: re-init spectrum on window resize
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-        clearTimeout(resizeTimeout);
-        resizeTimeout = setTimeout(() => {
-            lastBandCount = 0; // force re-init on next frame
-        }, 300);
-    });
 })();
 </script>
 </body>

@@ -33,9 +33,8 @@
     const START_ANGLE = Math.PI * 0.75;   // 135° (7:30)
     const END_ANGLE   = Math.PI * 2.25;   // 405°≡45° (4:30)
 
-    const NEEDLE_ATTACK  = 0.08;
-    const NEEDLE_RELEASE = 0.04;
-    const LP_ALPHA = 0.15;
+    const NEEDLE_ATTACK  = 0.35;
+    const NEEDLE_RELEASE = 0.10;
     const PEAK_HOLD_TIME = 1200;
     const PEAK_DECAY_SPEED = 0.03;
     const TRAIL_LENGTH = 8;
@@ -61,7 +60,6 @@
     //  AUDIO STATE  (unchanged)
     // ═══════════════════════════════════════════════════════════
     let leftLevel = DB_MIN, rightLevel = DB_MIN;
-    let leftFiltered = DB_MIN, rightFiltered = DB_MIN;
     let leftNeedle = DB_MIN, rightNeedle = DB_MIN;
     let leftPeak = DB_MIN, rightPeak = DB_MIN;
     let leftPeakTime = 0, rightPeakTime = 0;
@@ -960,10 +958,8 @@
         const lw = window.innerWidth, lh = window.innerHeight;
 
         // Needle physics (low-pass filter → envelope follower)
-        leftFiltered  += (leftLevel  - leftFiltered)  * LP_ALPHA;
-        rightFiltered += (rightLevel - rightFiltered) * LP_ALPHA;
-        leftNeedle  = updateNeedle(leftNeedle, leftFiltered, NEEDLE_ATTACK, NEEDLE_RELEASE);
-        rightNeedle = updateNeedle(rightNeedle, rightFiltered, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        leftNeedle  = updateNeedle(leftNeedle, leftLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
+        rightNeedle = updateNeedle(rightNeedle, rightLevel, NEEDLE_ATTACK, NEEDLE_RELEASE);
 
         // Peak decay
         const now = performance.now();

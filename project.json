@@ -1,0 +1,7 @@
+{
+    "file": "index.html",
+    "title": "VU Meter - Modern Analog Audio Level",
+    "type": "web",
+    "description": "A modern analog VU meter wallpaper with dual-channel display, smooth needle animation, and neon glow effects. Captures system audio via Wallpaper Engine audio API.",
+    "tags": ["audio", "visualizer", "vu meter", "analog", "music"]
+}

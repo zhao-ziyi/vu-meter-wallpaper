@@ -75,14 +75,12 @@
         if (!audioArray || audioArray.length < 128) return;
         const now = performance.now();
         lastAudioUpdate = now;
-        let lSum = 0;
-        for (let i = 0; i < 64; i++) { const v = Math.min(audioArray[i], 1); lSum += v; audioSpectrum[i] = v; }
-        let lAvg = lSum / 64;
-        let rSum = 0;
-        for (let i = 64; i < 128; i++) { const v = Math.min(audioArray[i], 1); rSum += v; audioSpectrum[i] = v; }
-        let rAvg = rSum / 64;
-        leftLevel  = -20 + Math.pow(lAvg, 0.15) * 23;
-        rightLevel = -20 + Math.pow(rAvg, 0.15) * 23;
+        let lMax = 0;
+        for (let i = 0; i < 64; i++) { const v = Math.min(audioArray[i], 1); if (v > lMax) lMax = v; audioSpectrum[i] = v; }
+        let rMax = 0;
+        for (let i = 64; i < 128; i++) { const v = Math.min(audioArray[i], 1); if (v > rMax) rMax = v; audioSpectrum[i] = v; }
+        leftLevel  = -20 + lMax * 23;
+        rightLevel = -20 + rMax * 23;
         if (leftLevel > leftPeak)  { leftPeak = leftLevel;  leftPeakTime = now; }
         if (rightLevel > rightPeak) { rightPeak = rightLevel; rightPeakTime = now; }
         clearTimeout(audioTimeout);
